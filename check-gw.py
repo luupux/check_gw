@@ -4,7 +4,8 @@ import os
 import re
 import time
 import sys
-__author__="Mauro Ferrigno"
+__author__="Mauro Ferrigno mauro@flink.it"
+
 
 DEBUG=0
 listhost=['151.1.1.1','www.google.it','193.43.2.1','222.222.222.221','111.222.222.221']
