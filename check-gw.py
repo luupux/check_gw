@@ -1,3 +1,4 @@
+#!/usr/bin/python -t
 from optparse import OptionParser
 import os
 import re
@@ -7,6 +8,7 @@ __author__="Mauro Ferrigno"
 
 DEBUG=0
 listhost=['151.1.1.1','www.google.it','193.43.2.1','222.222.222.221','111.222.222.221']
+#listhost=['222.222.222.221','111.222.222.221']
 
 class ping:
 	def __init__(self,lifeline="NONE",report="NONE"):	
@@ -47,48 +49,60 @@ class ping:
 			print "RESULT "+result
 
 		if int(result) < int(crit):
-			return "CRITICAL"
+			return " CRITICAL "+result+"% PACKET RECEIVED"
 
 		if int(result) < int(warn):
-			return "WARNING"
+			return " WARNING "+result+"% PACKET RECEIVED"
 
-		return "OK"
+		return " OK "+result+"% PACKET RECEIVED"
 
 
+def statuscode(checkval):
+	if re.match(r'^.*OK',checkval,re.IGNORECASE):
+		return 0
+	elif re.match(r'^.*WARNING',checkval,re.IGNORECASE):
+		return 1
+	elif re.match(r'^.*CRITICAL',checkval,re.IGNORECASE):
+		return 2
+	else:
+		return 3
 
 
 
 class parseinput:
-        def __init__(self,options=None,args=None):
-                parser = OptionParser()
-                parser.add_option("--warn",dest="warn",default="None",help="Warning  threshold")
-                parser.add_option("--crit",dest="crit",default="None",help="Critical threshold")
+	def __init__(self,options=None,args=None):
+		parser = OptionParser()
+		parser.add_option("--warn",dest="warn",default="None",help="Warning  threshold")
+		parser.add_option("--crit",dest="crit",default="None",help="Critical threshold")
 		(options, args) = parser.parse_args()
-                self.options=options
-                self.args=args
-                options.fargs=' '.join(args)
-                self.fargs = options.fargs
-	
+		self.options=options
+		self.args=args
+		options.fargs=' '.join(args)
+		self.fargs = options.fargs
+
 		if len(sys.argv)==1:
-                        parser.error("-h for help")
+			parser.error("-h for help")
 		
 		if options.warn == "None":
-                        parser.error("options --wan not found")
+			parser.error("options --wan not found")
 
-                if options.crit == "None":
-                        parser.error("options --crit not found")
+		if options.crit == "None":
+			parser.error("options --crit not found")
 
 
 
 def main():
-	pi=parseinput()
-	a=ping()
-	pingresults=a.pinghost(listhost)
-	print a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
-	
+	pi = parseinput()
+	a = ping()
+	pingresults = a.pinghost(listhost)
+	resultcode = a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
+	print resultcode
+	sys.exit(statuscode(resultcode))
+
+		
 
 	
 
 if __name__=="__main__":
-        main()
+	main()
 
