@@ -1,0 +1,3 @@
+Example use
+STANDARD MODE	check-gw.py --warn 80 --crit 60   
+VERBOSE  MODE 	check-gw.py --warn 80 --crit 60 --verb
