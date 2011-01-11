@@ -6,23 +6,23 @@ import time
 import sys
 __author__="Mauro Ferrigno mauro@flink.it"
 
-
-DEBUG=0
-listhost=['151.1.1.1','www.google.it','193.43.2.1','222.222.222.221','111.222.222.221']
-#listhost=['222.222.222.221','111.222.222.221']
+verbose=None
+#listhost=['151.1.1.1','www.google.it','193.43.2.1','222.222.222.221','111.222.222.221']
+listhost=['222.222.222.221','111.222.222.221']
 
 class ping:
-	def __init__(self,lifeline="NONE",report="NONE"):	
+	def __init__(self,lifeline="NONE",report="NONE",verbose=None):	
 		self.lifeline = re.compile(r"(\d) received")
 		self.report = ("No response","Partial Response","Alive")
 		self.countok=[]
+		self.verbose=verbose
 
 	def pinghost(self,listhost):
 		self.listhost=listhost
 		for host in self.listhost:
 			ip = str(host)
 			pingaling = os.popen("ping -w2 -q -c2 "+ip,"r")
-			if DEBUG :
+			if self.verbose :
 				print "Testing ",ip,
 				sys.stdout.flush()
 			while 1:
@@ -30,13 +30,13 @@ class ping:
 				if not line: break
 				igot = re.findall(self.lifeline,line)
 				if igot:
-					if DEBUG :
+					if self.verbose :
 						print self.report[int(igot[0])]
 					if int(igot[0]) == 2:
 						self.countok.append(host)
 		return self.countok
 
-	def calcavaibility(self,al,warn,crit):
+	def calcavaibility(self,al,warn,crit,verbose="NONE"):
 		"""CALCOLA LA PERCENTUALE PER LE SOGLIE WARN E CRIT"""
 		self.al = al
 		self.crit = crit
@@ -44,7 +44,7 @@ class ping:
 		pingok = float(len(self.al))
 		ghost = float(len(self.listhost))
 		result = '%.0f' %(round((pingok/ghost) *100))
-		if DEBUG :
+		if self.verbose :
 			print "WARN "+str(warn)
 			print "CRIT "+str(crit)
 			print "RESULT "+result
@@ -75,6 +75,7 @@ class parseinput:
 		parser = OptionParser()
 		parser.add_option("--warn",dest="warn",default="None",help="Warning  threshold")
 		parser.add_option("--crit",dest="crit",default="None",help="Critical threshold")
+		parser.add_option("--verb",action="store_true", dest="verb",help="Verbose ping")
 		(options, args) = parser.parse_args()
 		self.options=options
 		self.args=args
@@ -89,12 +90,11 @@ class parseinput:
 
 		if options.crit == "None":
 			parser.error("options --crit not found")
-
-
-
+		
 def main():
 	pi = parseinput()
-	a = ping()
+	verbmode = pi.options.verb
+	a = ping(verbose=verbmode)
 	pingresults = a.pinghost(listhost)
 	resultcode = a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
 	print resultcode
