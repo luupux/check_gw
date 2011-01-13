@@ -96,7 +96,8 @@ class parseinput:
 
 ############################################################
 class managegw:
-	def __init__(self,listgw):
+	def __init__(self,listgw,verbose=None):
+		self.verbose=verbose
 		self.listgw=listgw
 		self.al=[]
 		for elem in os.popen("route -n").read().split("\n"):
@@ -109,14 +110,38 @@ class managegw:
 		return 	self.activegw
 
 	def getothergw(self):
-		self.listgw.remove(self.activegw)
+		self.listgw.remove(self.getactivegw())
 		return self.listgw[0]
 
-activegw =  managegw(listgw).getactivegw()
-newgw = managegw(listgw).getothergw()
+	def setroutegw(self):
+		ip=str(self.getothergw())
+		print ip
+		routeadd = os.popen("route add default gw  "+ip,"r")
+		if self.verbose :
+			print "Add new gateway ",ip,
+			sys.stdout.flush()
+		while 1:
+			line = routeadd.readline()
+			print "ERROR"+igot
+			if not line: break
+#			igot = re.findall(self.lifeline,line)
+#			if igot:
+			else: 
+				print igot # IL PROBLEMA DA RISOLVERE E QUI  IGOT != LINE mentre deve essere IGOT=LINE
+				if self.verbose :
+					print self.report[int(igot[0])]
+				if int(igot[0]) == 2:
+					self.countok.append(host)
+				return 1	# ERROR
+		
 
+
+activegw =  managegw(listgw).getactivegw()
 print "ACTIVEGW "+str(activegw)
-print "NEWGW "+str(newgw)
+newgw = managegw(listgw).setroutegw()
+#newgw = managegw(listgw).getothergw()
+#print "NEWGW "+str(newgw)
+
 exit(0)
 ###########################################################
 def main():
