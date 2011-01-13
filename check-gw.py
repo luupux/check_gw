@@ -3,12 +3,14 @@ from optparse import OptionParser
 import os
 import re
 import time
+import string
 import sys
 __author__="Mauro Ferrigno mauro@flink.it"
 
 verbose=None
 #listhost=['151.1.1.1','www.google.it','193.43.2.1','222.222.222.221','111.222.222.221']
 listhost=['222.222.222.221','111.222.222.221']
+listgw=['10.0.1.250','10.0.1.254']
 
 class ping:
 	def __init__(self,lifeline="NONE",report="NONE",verbose=None):	
@@ -18,6 +20,7 @@ class ping:
 		self.verbose=verbose
 
 	def pinghost(self,listhost):
+		''' RITORNA L' IP DEGLI HOST RAGGIUNGIBILE'''
 		self.listhost=listhost
 		for host in self.listhost:
 			ip = str(host)
@@ -90,13 +93,40 @@ class parseinput:
 
 		if options.crit == "None":
 			parser.error("options --crit not found")
-		
+
+############################################################
+class managegw:
+	def __init__(self,listgw):
+		self.listgw=listgw
+		self.al=[]
+		for elem in os.popen("route -n").read().split("\n"):
+			if re.match("^[0-9]", elem.strip()):
+				self.al.append(elem)
+
+		self.activegw=self.al[4].split()[1]
+	
+	def getactivegw(self):
+		return 	self.activegw
+
+	def getothergw(self):
+		self.listgw.remove(self.activegw)
+		return self.listgw[0]
+
+activegw =  managegw(listgw).getactivegw()
+newgw = managegw(listgw).getothergw()
+
+print "ACTIVEGW "+str(activegw)
+print "NEWGW "+str(newgw)
+exit(0)
+###########################################################
 def main():
 	pi = parseinput()
 	verbmode = pi.options.verb
 	a = ping(verbose=verbmode)
 	pingresults = a.pinghost(listhost)
 	resultcode = a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
+	gw = ping().pinghost(['151.1.1.3'])
+	print gw
 	print resultcode
 	sys.exit(statuscode(resultcode))
 
