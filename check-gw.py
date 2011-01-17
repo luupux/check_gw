@@ -59,7 +59,7 @@ class ping:
 			return " WARNING "+result+"% PACKET RECEIVED"
 
 		return " OK "+result+"% PACKET RECEIVED"
-
+################# END  CLASS PING ########
 
 def statuscode(checkval):
 	if re.match(r'^.*OK',checkval,re.IGNORECASE):
@@ -70,8 +70,7 @@ def statuscode(checkval):
 		return 2
 	else:
 		return 3
-
-
+################ END FUNCTION STATUSCODDE  ##############
 
 class parseinput:
 	def __init__(self,options=None,args=None):
@@ -93,8 +92,8 @@ class parseinput:
 
 		if options.crit == "None":
 			parser.error("options --crit not found")
+################ END CLASS PARSEINPUT ##############
 
-############################################################
 class managegw:
 	def __init__(self,listgw,verbose=None):
 		self.verbose=verbose
@@ -103,8 +102,7 @@ class managegw:
 		for elem in os.popen("route -n").read().split("\n"):
 			if re.match("^[0-9]", elem.strip()):
 				self.al.append(elem)
-
-		self.activegw=self.al[4].split()[1]
+		self.activegw=self.al[-1].split()[1]
 	
 	def getactivegw(self):
 		return 	self.activegw
@@ -115,35 +113,32 @@ class managegw:
 
 	def setroutegw(self):
 		ip=str(self.getothergw())
-		print ip
-		routeadd = os.popen("route add default gw  "+ip,"r")
-		if self.verbose :
-			print "Add new gateway ",ip,
-			sys.stdout.flush()
+		stdin,stdout,stderr = os.popen3('route add default gw '+ip,'r')
+		self.verbose="PIPPO"
+		errors = stderr.read()
+		if errors:
+			if self.verbose :
+				print errors
+			return 1
+
 		while 1:
-			line = routeadd.readline()
-			print "ERROR"+igot
-			if not line: break
-#			igot = re.findall(self.lifeline,line)
-#			if igot:
-			else: 
-				print igot # IL PROBLEMA DA RISOLVERE E QUI  IGOT != LINE mentre deve essere IGOT=LINE
+			line = stdout.read()
+			if not line: 
 				if self.verbose :
-					print self.report[int(igot[0])]
-				if int(igot[0]) == 2:
-					self.countok.append(host)
-				return 1	# ERROR
-		
-
-
-activegw =  managegw(listgw).getactivegw()
-print "ACTIVEGW "+str(activegw)
+					print "Add new gateway ",ip,
+					sys.stdout.flush()
+				return 0
+			else:
+				if self.verbose :
+					print line
+				return 1
+#activegw =  managegw(listgw).getactivegw()
+#print "ACTIVEGW "+str(activegw)
 newgw = managegw(listgw).setroutegw()
 #newgw = managegw(listgw).getothergw()
 #print "NEWGW "+str(newgw)
-
-exit(0)
-###########################################################
+sys.exit(0) 
+################ END CLASS managegw ##############
 def main():
 	pi = parseinput()
 	verbmode = pi.options.verb
