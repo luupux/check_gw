@@ -1,6 +1,7 @@
 #!/usr/bin/python -t
 from optparse import OptionParser
 import os
+import subprocess
 import re
 import time
 import string
@@ -113,16 +114,19 @@ class managegw:
 
 	def setroutegw(self):
 		ip=str(self.getothergw())
-		stdin,stdout,stderr = os.popen3('route add default gw '+ip,'r')
+		#self.cmdline='route add default gw '+ip
+		self.cmdline='route add -host 217.133.71.30  gw '+ip
+		p=subprocess.Popen(self.cmdline, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		stdout, stderr = p.communicate()
+#		stdin,stdout,stderr = os.popen3('route add default gw '+ip,'r')
 		self.verbose="PIPPO"
-		errors = stderr.read()
-		if errors:
+		if stderr:
 			if self.verbose :
-				print errors
+				print stderr
 			return 1
-
-		while 1:
-			line = stdout.read()
+		line = stdout.read()
+		while line:
+			print line
 			if not line: 
 				if self.verbose :
 					print "Add new gateway ",ip,
