@@ -103,17 +103,18 @@ class managegw:
 		for elem in os.popen("route -n").read().split("\n"):
 			if re.match("^[0-9]", elem.strip()):
 				self.al.append(elem)
-		self.activegw=self.al[-1].split()[1]
-	
+		self.activegw = self.al[-1].split()[1]
+		self.othergw = filter(lambda x:  x!=self.activegw,listgw)
+
 	def getactivegw(self):
 		return 	self.activegw
 
+
 	def getothergw(self):
-		self.listgw.remove(self.getactivegw())
-		return self.listgw[0]
+		return str(self.othergw[0])
 
 	def setroutegw(self):
-		ip=str(self.getothergw())
+		ip=self.getothergw()
 		#self.cmdline='route add default gw '+ip
 		self.cmdline='route add -host 217.133.71.30  gw '+ip
 		p=subprocess.Popen(self.cmdline, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -124,18 +125,17 @@ class managegw:
 			if self.verbose :
 				print stderr
 			return 1
-		line = stdout.read()
-		while line:
-			print line
-			if not line: 
-				if self.verbose :
-					print "Add new gateway ",ip,
-					sys.stdout.flush()
-				return 0
-			else:
-				if self.verbose :
-					print line
-				return 1
+		
+		if not stdout: 
+			if self.verbose :
+				print "Add new gateway ",ip,
+				sys.stdout.flush()
+			return 0
+		else:
+			if self.verbose :
+				print line
+			return 1
+
 #activegw =  managegw(listgw).getactivegw()
 #print "ACTIVEGW "+str(activegw)
 newgw = managegw(listgw).setroutegw()
