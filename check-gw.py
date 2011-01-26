@@ -62,16 +62,6 @@ class ping:
 		return " OK "+result+"% PACKET RECEIVED"
 ################# END  CLASS PING ########
 
-def statuscode(checkval):
-	if re.match(r'^.*OK',checkval,re.IGNORECASE):
-		return 0
-	elif re.match(r'^.*WARNING',checkval,re.IGNORECASE):
-		return 1
-	elif re.match(r'^.*CRITICAL',checkval,re.IGNORECASE):
-		return 2
-	else:
-		return 3
-################ END FUNCTION STATUSCODDE  ##############
 
 class parseinput:
 	def __init__(self,options=None,args=None):
@@ -113,36 +103,83 @@ class managegw:
 	def getothergw(self):
 		return str(self.othergw[0])
 
-	def setroutegw(self):
-		ip=self.getothergw()
-		#self.cmdline='route add default gw '+ip
-		self.cmdline='route add -host 217.133.71.30  gw '+ip
-		p=subprocess.Popen(self.cmdline, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		stdout, stderr = p.communicate()
-#		stdin,stdout,stderr = os.popen3('route add default gw '+ip,'r')
-		self.verbose="PIPPO"
-		if stderr:
-			if self.verbose :
-				print stderr
-			return 1
-		
-		if not stdout: 
-			if self.verbose :
-				print "Add new gateway ",ip,
-				sys.stdout.flush()
-			return 0
-		else:
-			if self.verbose :
-				print line
-			return 1
+	@staticmethod
+	def _add_delete_cmd(command,gateway,ip):
+		''' Returns proper iproute command arguments to add and delete routes '''
+		cmd = 'route %s default gw %s' % (command, gateway)
+		if ip is not None:
+			cmd = 'route %s -host %s gw %s' % (command, ip, gateway)
 
-#activegw =  managegw(listgw).getactivegw()
-#print "ACTIVEGW "+str(activegw)
-newgw = managegw(listgw).setroutegw()
-#newgw = managegw(listgw).getothergw()
-#print "NEWGW "+str(newgw)
+		return cmd
+
+	@staticmethod
+	def add(gateway=None, ip=None):
+		''' Adds a new route with corresponding properties. '''
+		cmd = Routecmd._add_delete_cmd('add',gateway,ip)
+		return cmd
+
+	@staticmethod
+	def delete(gateway=None,ip=None):
+		''' Removes a route with corresponding properties. '''
+		cmd = Routecmd._add_delete_cmd('del',gateway,ip)
+		#iproute(cmd)
+		return cmd
+
+	@staticmethod
+	def execmd(args):
+		args_list = args.split()
+		#cmd = [IPROUTE_PATH] + args_list
+		cmd =  args_list
+		print cmd
+		proc = subprocess.Popen(cmd,
+				stdin=subprocess.PIPE,
+				stdout=subprocess.PIPE,
+				stderr=subprocess.PIPE,
+				close_fds=True)
+		stdout_value, stderr_value = proc.communicate()
+		if stderr_value:
+			raise NameError(stderr_value)
+		if stdout_value:
+			return stdout_value
+
+
+#Routecmd.execmd(Routecmd.add('10.0.1.250','1.1.1.1'))
+#Routecmd.execmd(Routecmd.delete('10.0.1.250','1.1.1.1'))
+print  managegw(listgw).getactivegw()
+print  managegw(listgw).getactivegw()
 sys.exit(0) 
 ################ END CLASS managegw ##############
+
+############### MISC FUNC ###############
+def statuscode(checkval):
+	if re.match(r'^.*OK',checkval,re.IGNORECASE):
+		return 0
+	elif re.match(r'^.*WARNING',checkval,re.IGNORECASE):
+		return 1
+	elif re.match(r'^.*CRITICAL',checkval,re.IGNORECASE):
+		return 2
+	else:
+		return 3
+################ END FUNCTION STATUSCODDE  ##############
+def iproute(args):
+		'''An iproute wrapper'''
+		args_list = args.split()
+		#cmd = [IPROUTE_PATH] + args_list
+		cmd =  args_list
+#		print cmd
+		proc = subprocess.Popen(cmd,
+				stdin=subprocess.PIPE,
+				stdout=subprocess.PIPE,
+				stderr=subprocess.PIPE,
+				close_fds=True)
+		stdout_value, stderr_value = proc.communicate()
+		if stderr_value:
+			raise NameError(stderr_value)
+		if stdout_value:
+			return stdout_value
+
+################ END FUNCTION IPROUTE  ##############
+
 def main():
 	pi = parseinput()
 	verbmode = pi.options.verb
