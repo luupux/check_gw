@@ -127,8 +127,6 @@ class managegw:
 		return cmd
 
 
-#print  managegw(listgw).getactivegw()
-#print  managegw(listgw).getothergw()
 ################ END CLASS managegw ##############
 
 ############### MISC FUNC ###############
