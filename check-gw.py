@@ -8,10 +8,10 @@ import string
 import sys
 __author__="Mauro Ferrigno mauro@flink.it"
 
-verbose=None
-#listhost=['151.1.1.1','www.google.it','193.43.2.1','222.222.222.221','111.222.222.221']
-listhost=['222.222.222.221','111.222.222.221']
-listgw=['10.0.1.250','10.0.1.254']
+verbose=True
+#listhost=['151.1.1.1','www.google.it','193.43.2.1','dns.nic.it','151.1.1.1']
+listhost=['222.222.222.221','111.222.222.221'] # PING HOST
+listgw=['10.0.1.250','10.0.1.254'] # GATEWAY HOST
 
 class ping:
 	def __init__(self,lifeline="NONE",report="NONE",verbose=None):	
@@ -115,39 +115,20 @@ class managegw:
 	@staticmethod
 	def add(gateway=None, ip=None):
 		''' Adds a new route with corresponding properties. '''
-		cmd = Routecmd._add_delete_cmd('add',gateway,ip)
+		cmd = managegw._add_delete_cmd('add',gateway,ip)
+		iproute(cmd)
 		return cmd
 
 	@staticmethod
 	def delete(gateway=None,ip=None):
 		''' Removes a route with corresponding properties. '''
-		cmd = Routecmd._add_delete_cmd('del',gateway,ip)
-		#iproute(cmd)
+		cmd = managegw._add_delete_cmd('del',gateway,ip)
+		iproute(cmd)
 		return cmd
 
-	@staticmethod
-	def execmd(args):
-		args_list = args.split()
-		#cmd = [IPROUTE_PATH] + args_list
-		cmd =  args_list
-		print cmd
-		proc = subprocess.Popen(cmd,
-				stdin=subprocess.PIPE,
-				stdout=subprocess.PIPE,
-				stderr=subprocess.PIPE,
-				close_fds=True)
-		stdout_value, stderr_value = proc.communicate()
-		if stderr_value:
-			raise NameError(stderr_value)
-		if stdout_value:
-			return stdout_value
 
-
-#Routecmd.execmd(Routecmd.add('10.0.1.250','1.1.1.1'))
-#Routecmd.execmd(Routecmd.delete('10.0.1.250','1.1.1.1'))
-print  managegw(listgw).getactivegw()
-print  managegw(listgw).getactivegw()
-sys.exit(0) 
+#print  managegw(listgw).getactivegw()
+#print  managegw(listgw).getothergw()
 ################ END CLASS managegw ##############
 
 ############### MISC FUNC ###############
@@ -164,9 +145,7 @@ def statuscode(checkval):
 def iproute(args):
 		'''An iproute wrapper'''
 		args_list = args.split()
-		#cmd = [IPROUTE_PATH] + args_list
 		cmd =  args_list
-#		print cmd
 		proc = subprocess.Popen(cmd,
 				stdin=subprocess.PIPE,
 				stdout=subprocess.PIPE,
@@ -186,8 +165,23 @@ def main():
 	a = ping(verbose=verbmode)
 	pingresults = a.pinghost(listhost)
 	resultcode = a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
-	gw = ping().pinghost(['151.1.1.3'])
-	print gw
+
+	if statuscode(resultcode) > 1: # UTILIZZATO PER LE VERIFICHE DI CAMBIO GW
+		''' PING TEST FAIL SET OTHERGW AND TEST OTHERGW'''
+		activegw = managegw(listgw).getactivegw()
+		othergw = managegw(listgw).getothergw()
+		managegw.add(othergw)
+		managegw.delete(activegw)
+#		listhost1=['151.1.1.1','193.43.2.1','173.203.44.122','151.1.1.1']
+		pingresults = a.pinghost(listhost)
+		resultcode = a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
+		if statuscode(resultcode) > 1:
+			''' PING TEST FOR OTHERGW RESTORE CONFIG AND EXIT CRITICAL ERROR'''
+			managegw.add(activegw)
+			managegw.delete(othergw)
+			print "CRITICAL ALL GW OK"
+			sys.exit(statuscode(' CRITICAL'))
+	
 	print resultcode
 	sys.exit(statuscode(resultcode))
 
