@@ -1,3 +1,10 @@
+Setup
+modify array value in check-gw.py 
+listhost=['222.222.222.221','111.222.222.221'] # PING HOST
+listgw=['10.0.1.250','10.0.1.254'] # GATEWAY HOST 
+
 Example use
-STANDARD MODE	check-gw.py --warn 80 --crit 60   
-VERBOSE  MODE 	check-gw.py --warn 80 --crit 60 --verb
+STANDARD MODE:	check-gw.py --warn 80 --crit 60   
+VERBOSE  MODE: 	check-gw.py --warn 80 --crit 60 --verb
+
+

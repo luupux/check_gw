@@ -8,7 +8,7 @@ import string
 import sys
 __author__="Mauro Ferrigno mauro@flink.it"
 
-verbose=True
+#verbose=True
 #listhost=['151.1.1.1','www.google.it','193.43.2.1','dns.nic.it','151.1.1.1']
 listhost=['222.222.222.221','111.222.222.221'] # PING HOST
 listgw=['10.0.1.250','10.0.1.254'] # GATEWAY HOST
@@ -179,7 +179,7 @@ def main():
 			''' PING TEST FOR OTHERGW RESTORE CONFIG AND EXIT CRITICAL ERROR'''
 			managegw.add(activegw)
 			managegw.delete(othergw)
-			print "CRITICAL ALL GW OK"
+			print resultcode
 			sys.exit(statuscode(' CRITICAL'))
 	
 	print resultcode
