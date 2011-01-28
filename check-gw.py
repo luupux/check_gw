@@ -1,4 +1,27 @@
 #!/usr/bin/python -t
+
+# -------------------------------------------------------------------------------
+# Copyright:   2011 (c) Mauro Ferrigno
+# License:     GPL2
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# you should have received a copy of the GNU General Public License
+# along with this program (or with Nagios); if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA
+# -------------------------------------------------------------------------------
+# Credits go to Ethan Galstad for coding Nagios
+# If any changes are made to this script, please mail me a copy of the changes
+#
 from optparse import OptionParser
 import os
 import subprocess
@@ -8,7 +31,6 @@ import string
 import sys
 __author__="Mauro Ferrigno mauro@flink.it"
 
-#verbose=True
 #listhost=['151.1.1.1','www.google.it','193.43.2.1','dns.nic.it','151.1.1.1']
 listhost=['222.222.222.221','111.222.222.221'] # PING HOST
 listgw=['10.0.1.250','10.0.1.254'] # GATEWAY HOST
@@ -68,6 +90,7 @@ class parseinput:
 		parser = OptionParser()
 		parser.add_option("--warn",dest="warn",default="None",help="Warning  threshold")
 		parser.add_option("--crit",dest="crit",default="None",help="Critical threshold")
+		parser.add_option("--state",dest="state",default="OK",help="State returned by host-alive")
 		parser.add_option("--verb",action="store_true", dest="verb",help="Verbose ping")
 		(options, args) = parser.parse_args()
 		self.options=options
@@ -159,12 +182,10 @@ def iproute(args):
 
 def main():
 	pi = parseinput()
+	checkalive=pi.options.state
 	verbmode = pi.options.verb
 	a = ping(verbose=verbmode)
-	pingresults = a.pinghost(listhost)
-	resultcode = a.calcavaibility(pingresults,pi.options.warn,pi.options.crit)
-
-	if statuscode(resultcode) > 1: # UTILIZZATO PER LE VERIFICHE DI CAMBIO GW
+	if checkalive == 'CRITICAL': # UTILIZZATO PER LE VERIFICHE DI CAMBIO GW
 		''' PING TEST FAIL SET OTHERGW AND TEST OTHERGW'''
 		activegw = managegw(listgw).getactivegw()
 		othergw = managegw(listgw).getothergw()
@@ -180,8 +201,8 @@ def main():
 			print resultcode
 			sys.exit(statuscode(' CRITICAL'))
 	
-	print resultcode
-	sys.exit(statuscode(resultcode))
+	print " OK"
+	sys.exit(0)
 
 		
 
